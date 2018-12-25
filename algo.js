@@ -9,12 +9,6 @@ import {
   forEachInPairs
 } from './utils.js';
 
-function createCirularComparator(center) {
-  return function(p1, p2) {
-    return getAngle(center, p1) - getAngle(center, p2);
-  };
-}
-
 export function getDelauneyTriangles(points) {
   var triangles = [];
   var register = {};
@@ -76,24 +70,6 @@ export function getLinks(triangles) {
   return register;
 }
 
-function getTrivialLinks(points) {
-  const register = {};
-  for (var i = 0; i < points.length - 1; i++) {
-    const pi = points[i];
-    loop:
-    for (var j = i + 1; j < points.length; j++) {
-      const pj = points[j];
-      for (var k = 0; k < points.length; k++) {
-        if (k === i || k === j) continue;
-        const pk = points[k];
-        if (isPointBetween(pk, pi, pj)) continue loop;
-      }
-      registerLink(register, i, j);
-    }
-  }
-  return register;
-}
-
 export function attachLinksToPoints(points, links) {
   Object.keys(links).forEach(function (k) {
     const link = links[k];
@@ -111,14 +87,6 @@ export function attachLinksToPoints(points, links) {
       return getAngle(p, ps[0]) - getAngle(p, ps[1]);
     });
   });
-}
-
-function getItemNeighbours(item, array) {
-  var idx = array.indexOf(item);
-  return {
-    prev: array[(idx - 1 + array.length) % array.length],
-    next: array[(idx + 1 + array.length) % array.length]
-  };
 }
 
 function getPolygon(pt, points, trivialLinks) {

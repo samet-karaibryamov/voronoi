@@ -25,7 +25,3 @@ export function drawText(x, y, t, fontSize) {
   ctx.font = ctx.font.replace(/\d+(px.*)/, fontSize + '$1');
   ctx.fillText(t, x, y);
 }
-
-function clear() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-}

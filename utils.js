@@ -31,36 +31,6 @@ export function forEachInPairs(array, cb) {
   });
 }
 
-function pairedForEach(array, cb) {
-  array.forEach((e, i) => {
-    cb(e, array[(i + 1) % array.length], i);
-  });
-}
-
-function times(n, cb) {
-  for (var i = 0; i < n; i++) {
-    cb(i);
-  }
-}
-
-function reKey(obj, cb) {
-  var result = {};
-  Object.keys(obj).forEach(k => {
-    result[cb(k)] = obj[k];
-  });
-  return result;
-}
-
-function drawGuide(pi1, pi2, shift) {
-  var pbi = getPBisector(points[pi1], points[pi2]);
-  var v = getVector(pbi.a, pbi.b);
-  [pbi.a, pbi.b].forEach(p => {
-    p.x += shift * v.x;
-    p.y += shift * v.y;
-  });
-  drawLine(pbi.a, pbi.b);
-}
-
 export function initBounds(bounds) {
   var tl = { x: bounds.left, y: bounds.top };
   var tr = { x: bounds.right, y: bounds.top };
