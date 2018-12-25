@@ -1,5 +1,5 @@
 
-function generatePoints(n) {
+export function generatePoints(n) {
   var points = [];
   for(var i = 0; i < n; i++) {
     points.push({
@@ -10,7 +10,7 @@ function generatePoints(n) {
   return points;
 }
 
-function exractOrderedTriplets(indices) {
+export function exractOrderedTriplets(indices) {
   var len = indices.length;
   var triplets = [];
   indices.sort(function(a, b) { return a - b; });
@@ -24,7 +24,7 @@ function exractOrderedTriplets(indices) {
   return triplets;
 }
 
-function forEachInPairs(array, cb) {
+export function forEachInPairs(array, cb) {
   array.forEach(function(item1, i) {
     var item2 = array[(i + 1) % array.length];
     cb(item1, item2);
@@ -35,4 +35,55 @@ function pairedForEach(array, cb) {
   array.forEach((e, i) => {
     cb(e, array[(i + 1) % array.length], i);
   });
+}
+
+function times(n, cb) {
+  for (var i = 0; i < n; i++) {
+    cb(i);
+  }
+}
+
+function reKey(obj, cb) {
+  var result = {};
+  Object.keys(obj).forEach(k => {
+    result[cb(k)] = obj[k];
+  });
+  return result;
+}
+
+function drawGuide(pi1, pi2, shift) {
+  var pbi = getPBisector(points[pi1], points[pi2]);
+  var v = getVector(pbi.a, pbi.b);
+  [pbi.a, pbi.b].forEach(p => {
+    p.x += shift * v.x;
+    p.y += shift * v.y;
+  });
+  drawLine(pbi.a, pbi.b);
+}
+
+export function initBounds(bounds) {
+  var tl = { x: bounds.left, y: bounds.top };
+  var tr = { x: bounds.right, y: bounds.top };
+  var bl = { x: bounds.left, y: bounds.bottom };
+  var br = { x: bounds.right, y: bounds.bottom };
+  var leftl = { a: tl, b: bl };
+  var rightl = { a: tr, b: br };
+  var topl = { a: tl, b:tr };
+  var bottoml = { a: bl, b:br };
+  return Object.assign(
+    {      
+      x: bounds.left,
+      y: bounds.top,
+      w: bounds.right - bounds.left + 1,
+      h: bounds.bottom - bounds.top + 1,
+      lines: {
+        l: leftl,
+        r: rightl,
+        t: topl,
+        b: bottoml,
+      },
+      points: { tl, tr, bl, br }
+    },
+    bounds
+  );
 }

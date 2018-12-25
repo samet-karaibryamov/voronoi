@@ -1,3 +1,13 @@
+import {
+  getCircle,
+  getAngle,
+  getPBisector,
+  getIntersection
+} from './geometry.js';
+import {
+  exractOrderedTriplets,
+  forEachInPairs
+} from './utils.js';
 
 function createCirularComparator(center) {
   return function(p1, p2) {
@@ -5,7 +15,7 @@ function createCirularComparator(center) {
   };
 }
 
-function getDelauneyTriangles(points) {
+export function getDelauneyTriangles(points) {
   var triangles = [];
   var register = {};
   var plen = points.length;
@@ -56,7 +66,7 @@ function registerLink(register, idx1, idx2) {
   register[key].n++;
 }
 
-function getLinks(triangles) {
+export function getLinks(triangles) {
   var register = {};
   triangles.forEach(function(tri) {
     forEachInPairs(tri.indices, function(idx1, idx2) {
@@ -84,11 +94,22 @@ function getTrivialLinks(points) {
   return register;
 }
 
-function attachLinksToPoints(points, links) {
+export function attachLinksToPoints(points, links) {
   Object.keys(links).forEach(function (k) {
     const link = links[k];
     points[link.i[0]].links.push(link);
     points[link.i[1]].links.push(link);
+  });
+  points.forEach((p, pi) => {
+    // Order them circularly
+    p.links.sort((l1, l2) => {
+      var ps = [l1, l2].map(l => {
+        return points[
+          l.i[0] === pi ? l.i[1] : l.i[0]
+        ];
+      });
+      return getAngle(p, ps[0]) - getAngle(p, ps[1]);
+    });
   });
 }
 
@@ -100,50 +121,6 @@ function getItemNeighbours(item, array) {
   };
 }
 
-function boundaryVertices(point, ends, bounds) {
-  const bs = [ends.prev, ends.next].map(
-    end => intersectBounds(
-      {
-        a: point,
-        b: end.pt,
-      },
-      end.controlPt,
-      bounds,
-    )
-  );
-  console.log(bs);
-}
-
-function markPolygons(points, bounds) {
-  points.forEach((p, idx) => {
-    console.log(idx);
-    const phash = {};
-    p.triangles.forEach(tri => {
-      const nb = getItemNeighbours(idx, tri.indices);
-      [nb.prev, nb.next].forEach(i => {
-        const t = phash[i] = phash[i] || { idx: i, n: 0 };
-        t.n++;
-        t.triangle = tri;
-      });
-    });
-    const ends = Object.keys(phash).filter(k => phash[k].n === 1).map(k => phash[k]);
-    boundaryVertices(
-      points[idx],
-      {
-        prev: {
-          pt: points[ends[0].idx],
-          controlPt: points[ends[1].idx],
-        },
-        next: {
-          pt: points[ends[1].idx],
-          controlPt: points[ends[0].idx],
-        }
-      },
-      bounds,
-    );
-  });
-}
-
 function getPolygon(pt, points, trivialLinks) {
   const links = pt.links;
   const llen = links.length;
@@ -152,27 +129,52 @@ function getPolygon(pt, points, trivialLinks) {
     return {
       type: 'half',
       line: getPBisector(points[links[0].i[0]], points[links[0].i[1]]),
-      controlPt: pt,
+      center: pt,
     };
   if (trivialLinks)
     return {
       type: 'band',
       line1: getPBisector(points[links[0].i[0]], points[links[0].i[1]]),
       line2: getPBisector(points[links[1].i[0]], points[links[1].i[1]]),
+      center: pt,
     };
 
   const poly = {
     type: 'regular',
     lines: [],
     vertices: [],
+    center: pt,
   };
   poly.lines = links.map(l => {
     return getPBisector(points[l.i[0]], points[l.i[1]]);
   });
-  poly.vertices = 
+  // Edge point
+  if (links.length === 2) {
+    const l0 = poly.lines[0];
+    const l1 = poly.lines[1];
+    poly.vertices.push(
+      getIntersection(l0, l1),
+      l0,
+      l1,
+    );
+  } else {
+    links.forEach((l1, i) => {
+      const j = (i + 1) % links.length;
+      const l2 = links[j];
+      if (l1.n > 1 || l2.n > 1) {
+        poly.vertices.push(
+          getIntersection(poly.lines[i], poly.lines[j])
+        );
+      } else {
+        poly.vertices.push(
+          poly.lines[i], poly.lines[j]
+        );
+      }
+    });
+  }
   return poly;
 }
 
-function getPolygons(points, trivialLinks) {
+export function getPolygons(points, trivialLinks) {
   return points.map(pt => getPolygon(pt, points, trivialLinks));
 }
