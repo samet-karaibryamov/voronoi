@@ -18,7 +18,7 @@ function getDistance(p1, p2) {
   return Math.sqrt(dx * dx + dy * dy);
 }
 
-function getPBisector(a, b) {
+export function getPBisector(a, b) {
   var abM = getMiddle(a, b);
   var abV = getVector(a, b);
   return {
@@ -30,7 +30,7 @@ function getPBisector(a, b) {
   };
 }
 
-function getIntersection(l1, l2) {
+export function getIntersection(l1, l2) {
   var d = { x: [], y: [] };
   ['x', 'y'].forEach(function(k) {
     [l1, l2].forEach(function (l) {
@@ -46,7 +46,7 @@ function getIntersection(l1, l2) {
   };
 }
 
-function getCircle(a, b, c) {
+export function getCircle(a, b, c) {
   var abPB = getPBisector(a, b);
   var bcPB = getPBisector(b, c);
   var c = getIntersection(abPB, bcPB);
@@ -56,7 +56,7 @@ function getCircle(a, b, c) {
   }
 }
 
-function getAngle(origin, p) {
+export function getAngle(origin, p) {
   return Math.atan2(p.y - origin.y, p.x - origin.x);
 }
 
@@ -78,16 +78,28 @@ function sameSide(line, p1, p2) {
   return dd[0] * dd[1] > 0;
 }
 
-function intersectBounds(edge, controlPt, bounds) {
-  const { top, left, right, bottom } = bounds;
-  const pbi = getPBisector(edge.a, edge.b);
-  const v1 = getIntersection(pbi, { a: { x: 0, y: 0 }, b: { x: 0, y: 100 } });
-  const v2 = getIntersection(pbi, { a: { x: right, y: 0 }, b: { x: right, y: 100 } });
-  const h1 = getIntersection(pbi, { a: { x: 0, y: 0 }, b: { x: 100, y: 0 } });
-  const h2 = getIntersection(pbi, { a: { x: 0, y: bottom }, b: { x: 100, y: bottom } });
-  const a = [v1, v2]
-    .filter(p => isBetween(p.y, top, bottom))
-    .concat([h1, h2].filter(p => isBetween(p.x, left, right)));
-  const b = a.filter(p => !sameSide(edge, controlPt, p));
-  return b[0];
+function intersectLine(line, bounds) {
+  return [
+    getIntersection(line, bounds.lines.l),
+    getIntersection(line, bounds.lines.r),
+    getIntersection(line, bounds.lines.t),
+    getIntersection(line, bounds.lines.b),
+  ].filter(p => isPointBetween(p, bounds.points.tl, bounds.points.br));
+}
+
+export function intersectAbstractPolygon(poly, bounds) {
+  var verts = poly.vertices;
+  var infIdx = verts.findIndex(v => v.a);
+  if (infIdx > -1) {
+    var l1 = verts[infIdx];
+    var l2 = verts[infIdx + 1];
+    if (!l2.a) {
+      l2 = l1;
+      l1 = verts[verts.length - 1];
+    }
+    var pts1 = intersectLine(l1, bounds);
+    var pts2 = intersectLine(l2, bounds);
+    pts1 = pts1.filter(p => sameSide(l2, poly.center, p));
+    pts2 = pts2.filter(p => sameSide(l1, poly.center, p));
+  }
 }

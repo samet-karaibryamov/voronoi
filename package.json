@@ -1,0 +1,23 @@
+{
+  "name": "voronoi",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "http-server -c-1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/samet-karaibryamov/voronoi.git"
+  },
+  "author": "Samet Karaibryamov",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/samet-karaibryamov/voronoi/issues"
+  },
+  "homepage": "https://github.com/samet-karaibryamov/voronoi#readme",
+  "dependencies": {
+    "http-server": "^0.11.1"
+  }
+}
