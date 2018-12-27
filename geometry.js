@@ -1,18 +1,28 @@
-function getMiddle(p1, p2) {
+export const addPoints = (p1, p2) => ({ x: p1.x + p2.x, y: p1.y + p2.y });
+
+export function getMiddle(p1, p2) {
+  const points = p2 ? [p1, p2] : p1;
   return {
-    x: 0.5 * (p1.x + p2.x),
-    y: 0.5 * (p1.y + p2.y)
+    x: points.reduce((s, p) => s + p.x, 0) / points.length,
+    y: points.reduce((s, p) => s + p.y, 0) / points.length
   };
 }
 
-function getVector(p1, p2) {
+export function getVector(p1, p2) {
   return {
     x: p2.x - p1.x,
     y: p2.y - p1.y
   };
 }
 
-function getDistance(p1, p2) {
+export function scaleVector (v, k) {
+  return {
+    x: k * v.x,
+    y: k * v.y
+  };
+}
+
+export function getDistance(p1, p2) {
   var dx =p1.x - p2.x;
   var dy =p1.y - p2.y;
   return Math.sqrt(dx * dx + dy * dy);
@@ -60,46 +70,26 @@ export function getAngle(origin, p) {
   return Math.atan2(p.y - origin.y, p.x - origin.x);
 }
 
-function isBetween(x, a, b) {
-  return a <= x && x <= b;
-}
+export const getLineParams = ({ a, b }) => [a.y - b.y, a.x - b.x, a.x * b.y - a.y * b.x];
 
-function isPointBetween(p, pa, pb) {
-  const x = [pa.x, pb.x].sort();
-  const y = [pa.y, pb.y].sort();
-  return isBetween(p.x, x[0], x[1]) && isBetween(p.y, y[0], y[1]);
-}
+export function areCoHalfPlanar (line, pts, strict = false) {
+  const [a, b, c] = line.a ? getLineParams(line) : line;
 
-function sameSide(line, p1, p2) {
-  const { a, b } = line;
-  const dx = a.x - b.x;
-  const dy = a.y - b.y;
-  const dd = [p1, p2].map(p => (p.y - a.y) * dx - (p.x - a.x) * dy);
-  return dd[0] * dd[1] > 0;
-}
+  const signs = {};
+  pts.forEach(p => {
+    const sign = Math.sign(a * p.x - b * p.y + c);
+    signs[sign] = true;
+  });
+  // If all sign are the same
+  if (Object.keys(signs).length === 1) return true;
+  // If strictly on different half-planes
+  if (signs[1] && signs[-1]) return false;
+  // The remaining case is having a zero. This only depends on the flag
+  return !strict;
+};
 
-function intersectLine(line, bounds) {
-  return [
-    getIntersection(line, bounds.lines.l),
-    getIntersection(line, bounds.lines.r),
-    getIntersection(line, bounds.lines.t),
-    getIntersection(line, bounds.lines.b),
-  ].filter(p => isPointBetween(p, bounds.points.tl, bounds.points.br));
-}
+export const isBetween = (x, a, b, strict = false) =>
+  (a < x && x < b) || (a > x && x > b) || (!strict && (x === a || x === b));
 
-export function intersectAbstractPolygon(poly, bounds) {
-  var verts = poly.vertices;
-  var infIdx = verts.findIndex(v => v.a);
-  if (infIdx > -1) {
-    var l1 = verts[infIdx];
-    var l2 = verts[infIdx + 1];
-    if (!l2.a) {
-      l2 = l1;
-      l1 = verts[verts.length - 1];
-    }
-    var pts1 = intersectLine(l1, bounds);
-    var pts2 = intersectLine(l2, bounds);
-    pts1 = pts1.filter(p => sameSide(l2, poly.center, p));
-    pts2 = pts2.filter(p => sameSide(l1, poly.center, p));
-  }
-}
+export const isPointBetween = (p, a, b, strict = false) =>
+  isBetween(p.x, a.x, b.x, strict) && isBetween(p.y, a.y, b.y, strict);

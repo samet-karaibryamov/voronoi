@@ -1,5 +1,4 @@
 import {
-  initBounds,
   generatePoints
 } from './utils.js';
 import {
@@ -12,24 +11,42 @@ import {
   getDelauneyTriangles,
   getLinks,
   attachLinksToPoints,
-  getPolygons
+  getPolygons,
+  intersectPolygonWithViewport
 } from './algo.js';
-import {
-  intersectAbstractPolygon
-} from './geometry.js';
 
 var canvas = document.querySelector('canvas');
 var ctx = window.ctx = canvas.getContext('2d');
 ctx.translate(50, 50);
-var bounds = initBounds({
-  left: 0,
-  top: 0,
-  right: canvas.width - 1 - 100,
-  bottom: canvas.height - 1 - 100
-});
+ctx.clearRect(-50, -50, 500, 500);
+window.viewport = (() => {
+  const width = 400;
+  const height = 400;
+  const topLeft = { x: 0, y: 0 };
+  const bottomRight = { x: width, y: height };
+  const corners = [
+    topLeft,
+    { x: width, y: 0 },
+    bottomRight,
+    { x: 0, y: height },
+  ];
+  const walls = corners.map((c, i) => {
+    const c1 = corners[(i + 1) % 4];
+    return { a: c, b: c1 };
+  });
+  return {
+    x: 0,
+    y: 0,
+    walls,
+    corners,
+    topLeft,
+    bottomRight,
+    width,
+    height
+  };
+})();
 ctx.strokeStyle = 'black';
-ctx.strokeRect(bounds.x, bounds.y, bounds.w, bounds.h);
-var nodes = [];
+ctx.strokeRect(viewport.x, viewport.y, viewport.width, viewport.height);
 
 
 var points = generatePoints(10);
@@ -37,7 +54,7 @@ points = [
   { x: 100, y: 100 },
   { x: 200, y: 100 },
   { x: 350, y: 250 },
-  // { x: 100, y: 300 },
+  { x: 100, y: 300 },
   // { x: 300, y: 350 },
   // { x: 200, y: 300 },
 ];
@@ -49,7 +66,7 @@ function generateAndDraw() {
     p.idx = i;
   });
   points.forEach(function(p, i) {
-    drawPoint(p.x, p.y);
+    drawPoint(p);
     drawText(p.x + 5, p.y - 5, i, 20);
   });
 
@@ -73,35 +90,29 @@ function generateAndDraw() {
 
   window.polygons = getPolygons(points, trivialLinks);
 
-  polygons.forEach(pol => {
-    if (!pol) return;
-    switch (pol.type) {
-      case 'half':
-        drawLine(pol.line.a, pol.line.b);
-        break;
-      case 'band':
-        drawLine(pol.line1.a, pol.line1.b);
-        drawLine(pol.line2.a, pol.line2.b);
-        break;
-      case 'regular':
-        pol.lines.forEach(l => {
-          // drawLine(l.a, l.b);
-        });
-        // return;
-        pol.vertices.forEach(v => {
-          if (!('x' in v)) return;
-          drawPoint(v.x, v.y, 2);
-        });
-        break;
-      default:
-    }
+  window.contours = polygons.map(poly => intersectPolygonWithViewport(poly, viewport));
+  polygons.forEach(({ center }) => {
+    drawPoint(center, 5);
   });
-  
-  polygons.forEach(pol => {
-    if (pol.type === 'regular') {
-      intersectAbstractPolygon(pol, bounds);
-    }
+
+  [
+    contours[0],
+    contours[1],
+    contours[2],
+    contours[3],
+  ].forEach((contour, j) => {
+    ctx.beginPath();
+    contour.forEach((p, i) => {
+      if (i) {
+        ctx.lineTo(p.x, p.y);
+      } else {
+        ctx.moveTo(p.x, p.y);
+      }
+    });
+    ctx.fillStyle = ['#f008', '#0f08', '#00f8', '#ff08'][j];
+    ctx.fill();
   });
+
 }
 
 generateAndDraw();

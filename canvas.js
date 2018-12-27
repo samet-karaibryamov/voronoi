@@ -7,16 +7,18 @@ export function drawCircle(cx, cy, r) {
   ctx.setLineDash([]);
 }
 
-export function drawPoint(cx, cy, r) {
+export function drawPoint(p, r) {
   ctx.beginPath();
-  ctx.arc(cx, cy, r, 0, 2 * Math.PI);
+  ctx.arc(p.x, p.y, r, 0, 2 * Math.PI);
   ctx.fill();
 }
 
-export function drawLine(p1, p2) {
+export function drawLine(a, b) {
+  if (!b) ({ a, b } = a);
+
   ctx.beginPath();
-  ctx.moveTo(p1.x, p1.y);
-  ctx.lineTo(p2.x, p2.y);
+  ctx.moveTo(a.x, a.y);
+  ctx.lineTo(b.x, b.y);
   ctx.stroke();
 }
 
@@ -25,3 +27,5 @@ export function drawText(x, y, t, fontSize) {
   ctx.font = ctx.font.replace(/\d+(px.*)/, fontSize + '$1');
   ctx.fillText(t, x, y);
 }
+
+window.drawLine = drawLine;

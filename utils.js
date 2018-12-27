@@ -30,30 +30,3 @@ export function forEachInPairs(array, cb) {
     cb(item1, item2);
   });
 }
-
-export function initBounds(bounds) {
-  var tl = { x: bounds.left, y: bounds.top };
-  var tr = { x: bounds.right, y: bounds.top };
-  var bl = { x: bounds.left, y: bounds.bottom };
-  var br = { x: bounds.right, y: bounds.bottom };
-  var leftl = { a: tl, b: bl };
-  var rightl = { a: tr, b: br };
-  var topl = { a: tl, b:tr };
-  var bottoml = { a: bl, b:br };
-  return Object.assign(
-    {      
-      x: bounds.left,
-      y: bounds.top,
-      w: bounds.right - bounds.left + 1,
-      h: bounds.bottom - bounds.top + 1,
-      lines: {
-        l: leftl,
-        r: rightl,
-        t: topl,
-        b: bottoml,
-      },
-      points: { tl, tr, bl, br }
-    },
-    bounds
-  );
-}
