@@ -1,10 +1,10 @@
 
-export function generatePoints(n) {
+export function generatePoints(n, viewport) {
   var points = [];
   for(var i = 0; i < n; i++) {
     points.push({
-      x: Math.round(Math.random() * 600),
-      y: Math.round(Math.random() * 600)
+      x: Math.round(Math.random() * viewport.width),
+      y: Math.round(Math.random() * viewport.height)
     });
   }
   return points;

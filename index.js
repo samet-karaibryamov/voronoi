@@ -14,6 +14,7 @@ import {
   getPolygons,
   intersectPolygonWithViewport
 } from './algo.js';
+import { values as colors } from '/colors.js';
 
 var canvas = document.querySelector('canvas');
 var ctx = window.ctx = canvas.getContext('2d');
@@ -49,15 +50,15 @@ ctx.strokeStyle = 'black';
 ctx.strokeRect(viewport.x, viewport.y, viewport.width, viewport.height);
 
 
-var points = generatePoints(10);
-points = [
-  { x: 100, y: 100 },
-  { x: 200, y: 100 },
-  { x: 350, y: 250 },
-  { x: 100, y: 300 },
-  { x: 300, y: 350 },
-  { x: 200, y: 200 },
-];
+var points = generatePoints(9, viewport);
+// points = [
+//   { x: 100, y: 100 },
+//   { x: 200, y: 100 },
+//   { x: 350, y: 250 },
+//   { x: 100, y: 300 },
+//   { x: 300, y: 350 },
+//   { x: 200, y: 200 },
+// ];
 
 function generateAndDraw() {
   points.forEach(function(p, i) {
@@ -95,14 +96,7 @@ function generateAndDraw() {
     drawPoint(center, 5);
   });
 
-  [
-    contours[0],
-    contours[1],
-    contours[2],
-    contours[3],
-    contours[4],
-    contours[5],
-  ].forEach((contour, j) => {
+  contours.forEach((contour, j) => {
     ctx.beginPath();
     contour.forEach((p, i) => {
       if (i) {
@@ -111,7 +105,7 @@ function generateAndDraw() {
         ctx.moveTo(p.x, p.y);
       }
     });
-    ctx.fillStyle = ['#f008', '#0f08', '#00f8', '#ff08', '#f0f8', '#0ff8'][j];
+    ctx.fillStyle = colors[j + 5] + '80';
     ctx.fill();
   });
 
