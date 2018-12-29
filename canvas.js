@@ -1,3 +1,6 @@
+import {
+  addPoints
+} from './geometry.js';
 
 export function drawCircle(cx, cy, r) {
   ctx.beginPath();
@@ -15,6 +18,9 @@ export function drawPoint(p, r) {
 
 export function drawLine(a, b) {
   if (!b) ({ a, b } = a);
+  if (b.infinite) {
+    b = addPoints(a, b);
+  }
 
   ctx.beginPath();
   ctx.moveTo(a.x, a.y);
@@ -29,3 +35,4 @@ export function drawText(x, y, t, fontSize) {
 }
 
 window.drawLine = drawLine;
+window.drawPoint = drawPoint;

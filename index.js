@@ -55,8 +55,8 @@ points = [
   { x: 200, y: 100 },
   { x: 350, y: 250 },
   { x: 100, y: 300 },
-  // { x: 300, y: 350 },
-  // { x: 200, y: 300 },
+  { x: 300, y: 350 },
+  { x: 200, y: 200 },
 ];
 
 function generateAndDraw() {
@@ -100,6 +100,8 @@ function generateAndDraw() {
     contours[1],
     contours[2],
     contours[3],
+    contours[4],
+    contours[5],
   ].forEach((contour, j) => {
     ctx.beginPath();
     contour.forEach((p, i) => {
@@ -109,7 +111,7 @@ function generateAndDraw() {
         ctx.moveTo(p.x, p.y);
       }
     });
-    ctx.fillStyle = ['#f008', '#0f08', '#00f8', '#ff08'][j];
+    ctx.fillStyle = ['#f008', '#0f08', '#00f8', '#ff08', '#f0f8', '#0ff8'][j];
     ctx.fill();
   });
 

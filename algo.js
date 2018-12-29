@@ -116,23 +116,24 @@ function getPolygon(center, points, trivialLinks) {
       center,
     };
 
+  const lines = links.map(l => {
+    return getPBisector(points[l.i[0]], points[l.i[1]]);
+  });
   const poly = {
     type: 'regular',
-    lines: [],
+    lines,
     vertices: [],
     center,
   };
-  poly.lines = links.map(l => {
-    return getPBisector(points[l.i[0]], points[l.i[1]]);
-  });
+
   // Edge point
   if (links.length === 2) {
-    const l0 = poly.lines[0];
-    const l1 = poly.lines[1];
+    const l0 = lines[0];
+    const l1 = lines[1];
     poly.vertices.push(
       getIntersection(l0, l1),
-      l0,
       l1,
+      l0,
     );
   } else {
     links.forEach((l1, i) => {
@@ -140,11 +141,11 @@ function getPolygon(center, points, trivialLinks) {
       const l2 = links[j];
       if (l1.n > 1 || l2.n > 1) {
         poly.vertices.push(
-          getIntersection(poly.lines[i], poly.lines[j])
+          getIntersection(lines[i], lines[j])
         );
       } else {
         poly.vertices.push(
-          poly.lines[i], poly.lines[j]
+          lines[i], lines[j]
         );
       }
     });
@@ -152,31 +153,47 @@ function getPolygon(center, points, trivialLinks) {
   // Post-process for infinite points
   poly.vertices.some((l0, i, arr) => {
     const l1 = arr[(i + 1) % arr.length];
-    if (!l0.a || !l1.a) return;
+    if (l0.a && l1.a) {
+      const prev = arr[(i - 1 + arr.length) % arr.length];
+      const next = arr[(i + 2) % arr.length];
+      let v0 = getVector(l0.a, l0.b);
+      let v1 = getVector(l1.a, l1.b);
+      const halfPlaneL0 = lines[(i - 1 + lines.length) % lines.length];
+      const halfPlaneL1 = lines[(i + 2) % lines.length];
+      if (!areCoHalfPlanar(halfPlaneL0, [center, addPoints(prev, v0)])) {
+        v0 = scaleVector(v0, -1);
+      }
+      if (!areCoHalfPlanar(halfPlaneL1, [center, addPoints(next, v1)])) {
+        v1 = scaleVector(v1, -1);
+      }
+      v0.infinite = true;
+      v1.infinite = true;
 
-    const prev = arr[(i - 1 + arr.length) % arr.length];
-    const next = arr[(i + 2) % arr.length];
-    let v0 = getVector(l0.a, l0.b);
-    let v1 = getVector(l1.a, l1.b);
-    if (!areCoHalfPlanar(l1, [center, addPoints(prev, v0)])) {
-      v0 = scaleVector(v0, -1);
+      // Mutation ahead!!!
+      arr[i] = v0;
+      arr[(i + 1) % arr.length] = v1;
+      return true;
+    } 
+  });
+
+  // Fix line ends
+  let offset = 0;
+  poly.vertices.forEach((p0, i, arr) => {
+    const p1 = arr[(i + 1) % arr.length];
+    if (p0.infinite && p1.infinite) {
+      offset = -1;
+      return
     }
-    if (!areCoHalfPlanar(l0, [center, addPoints(next, v1)])) {
-      v1 = scaleVector(v1, -1);
+
+    const line = lines[(i + 1 + offset) % lines.length];
+    if (p0.infinite) {
+      line.a = p1;
+      line.b = p0;
+    } else {
+      line.a = p0;
+      line.b = p1;
     }
-    v0.infinite = true;
-    v1.infinite = true;
-
-    // Mutation ahead!!!
-    l0.a = prev;
-    l0.b = v0;
-    l1.a = next;
-    l1.b = v1;
-    arr[i] = v0;
-    arr[(i + 1) % arr.length] = v0;
-
-    // Early exit for slight optimization
-    return true;
+    console
   });
 
   return poly;

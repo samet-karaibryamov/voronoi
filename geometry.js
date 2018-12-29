@@ -8,10 +8,12 @@ export function getMiddle(p1, p2) {
   };
 }
 
-export function getVector(p1, p2) {
+export function getVector(a, b) {
+  if (a.a) ({ a, b } = a);
+
   return {
-    x: p2.x - p1.x,
-    y: p2.y - p1.y
+    x: b.x - a.x,
+    y: b.y - a.y
   };
 }
 
